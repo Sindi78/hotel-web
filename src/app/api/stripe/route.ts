@@ -55,6 +55,20 @@ export async function POST(req: Request, res: Response) {
     const discountPrice = room.price - (room.price / 100) * room.discount;
     const totalPrice = discountPrice * numberOfDays;
 
+    const metadataToSet = {
+      adults: adults.toString(),
+      checkinDate: formattedCheckinDate,
+      checkoutDate: formattedCheckoutDate,
+      children: children.toString(),
+      hotelRoom: room._id,
+      numberOfDays: numberOfDays.toString(),
+      user: userId,
+      discount: (room.discount || 0).toString(),
+      totalPrice: totalPrice.toString()
+    };
+
+    console.log('Creating Stripe session with metadata:', metadataToSet);
+
     // Create a stripe payment
     const stripeSession = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -73,18 +87,11 @@ export async function POST(req: Request, res: Response) {
       ],
       payment_method_types: ['card'],
       success_url: `${origin}/users/${userId}`,
-      metadata: {
-        adults,
-        checkinDate: formattedCheckinDate,
-        checkoutDate: formattedCheckoutDate,
-        children,
-        hotelRoom: room._id,
-        numberOfDays,
-        user: userId,
-        discount: room.discount,
-        totalPrice
-      }
+      metadata: metadataToSet
     });
+
+    console.log('Stripe session created:', stripeSession.id);
+    console.log('Session metadata after creation:', stripeSession.metadata);
 
     return NextResponse.json(stripeSession, {
       status: 200,
