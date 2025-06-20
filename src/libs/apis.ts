@@ -67,7 +67,7 @@ export const createBooking = async ({
   };
 
   const { data } = await axios.post(
-    `https://${process.env.NEXT_PUBLIC_SANITY_PROJECT_ID}.api.sanity.io/v2021-10-21/data/mutate/${process.env.NEXT_PUBLIC_SANITY_DATASET}`,
+    `https://${process.env.NEXT_PUBLIC_SANITY_PROJECT_ID}.api.sanity.io/v2025-05-28/data/mutate/${process.env.NEXT_PUBLIC_SANITY_DATASET}`,
     mutation,
     { headers: { Authorization: `Bearer ${process.env.SANITY_STUDIO_TOKEN}` } }
   );
@@ -76,26 +76,18 @@ export const createBooking = async ({
 };
 
 export const updateHotelRoom = async (hotelRoomId: string) => {
-  const mutation = {
-    mutations: [
-      {
-        patch: {
-          id: hotelRoomId,
-          set: {
-            isBooked: true,
-          },
-        },
-      },
-    ],
-  };
+  console.log('hotelRoomId received:', hotelRoomId, 'type:', typeof hotelRoomId);
+  
+  if (!hotelRoomId) {
+    throw new Error('hotelRoomId is required');
+  }
 
-  const { data } = await axios.post(
-    `https://${process.env.NEXT_PUBLIC_SANITY_PROJECT_ID}.api.sanity.io/v2021-10-21/data/mutate/${process.env.NEXT_PUBLIC_SANITY_DATASET}`,
-    mutation,
-    { headers: { Authorization: `Bearer ${process.env.SANITY_STUDIO_TOKEN}` } }
-  );
+  const result = await sanityClient
+    .patch(hotelRoomId)
+    .set({ isBooked: true })
+    .commit();
 
-  return data;
+  return result;
 };
 
 export async function getUserBookings(userId: string) {
